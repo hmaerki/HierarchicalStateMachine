@@ -1,0 +1,27 @@
+
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<?xml version='1.0' encoding='iso-8859-1' ?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+  <head>
+    <title>Hierarchical State Machine</title> 
+    <meta http-equiv='content-type' content='text/html;charset=iso-8859-1'>
+    <meta content='Zulu Website-Assembler v2.1.3' name='assembler'>
+    <meta content='Zulu by Positron and Maerki Informatik' name='description'>
+    <meta content='Zulu Website Assembler Positron Maerki Informatik Schweiz Switzerland'
+      name='keywords'>
+    <style type='text/css'>
+    <!--
+    /*  common styles  */
+    table.table_state {width: 100%; border-left: 2px solid #000000; border-right: 2px solid #000000; border-top: 0px solid #000000; border-bottom: 0px solid #000000}
+    td.td_header { background-color: #EEEEEE; border-bottom: 1px solid #000000; border-top: 1px solid #000000; font-weight: bold}
+    td.td_label {width: 1%; font-size: smaller; font-style: italic}
+    td.td_text {font-size: smaller}
+    td.td_space {width: 1%}
+    td.td_substate {width: 100%}
+    -->
+    </style>
+  </head>
+  <body>
+<p>This is a sample Statemachine as in figure 6.2 on page 170
+in 'Practical Statecharts in C/C++', ISBN 1-57820-110-1.</p><br><table class="table_state">  <tr>    <td class="td_header" colSpan="3">0</td>  </tr><tr class="tr_comment">  <td class="td_space">&nbsp;&nbsp;&nbsp;</td>  <td class="td_label">comment</td>  <td class="td_text">This&nbsp;is&nbsp;State&nbsp;"0"!</td></tr><TR class="tr_init">  <TD></TD>  <TD class="td_label">init</TD>  <TD class="td_text">0_1</TD></TR>  <tr class="tr_sub">    <td class="td_space">&nbsp;&nbsp;&nbsp;</td>    <td class="td_substate" colSpan="2"><table class="table_state">  <tr>    <td class="td_header" colSpan="3">1</td>  </tr><TR class="tr_init">  <TD></TD>  <TD class="td_label">init</TD>  <TD class="td_text">0_1_1</TD></TR>  <tr class="tr_sub">    <td class="td_space">&nbsp;&nbsp;&nbsp;</td>    <td class="td_substate" colSpan="2"><table class="table_state">  <tr>    <td class="td_header" colSpan="3">1</td>  </tr></table>    </td>  </tr></table><table class="table_state">  <tr>    <td class="td_header" colSpan="3">2</td>  </tr>  <tr class="tr_sub">    <td class="td_space">&nbsp;&nbsp;&nbsp;</td>    <td class="td_substate" colSpan="2"><table class="table_state">  <tr>    <td class="td_header" colSpan="3">1</td>  </tr>  <tr class="tr_sub">    <td class="td_space">&nbsp;&nbsp;&nbsp;</td>    <td class="td_substate" colSpan="2"><table class="table_state">  <tr>    <td class="td_header" colSpan="3">1</td>  </tr></table>    </td>  </tr></table><table class="table_state">  <tr>    <td class="td_header" colSpan="3">2</td>  </tr></table>    </td>  </tr></table>    </td>  </tr></table></body>
+</html>
