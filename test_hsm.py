@@ -82,7 +82,6 @@ class test_hsm(hsm.Statemachine):
   init_0 = state_0_1
   init_0_1 = state_0_1_1
 
-
 def analyse():
   def funcLogMain(strLine):
     print('Main: ' + strLine)
@@ -94,8 +93,11 @@ def analyse():
   
   def testEntryExit(sm, a, b, c, d, e):
     pass
-  def testTransition(sm, objSignal, newState):
+
+  def testTransition(sm, objSignal, expectState):
     sm.dispatch(objSignal)
+    expectStateName = expectState.__name__[len('state_'):]
+    assert expectStateName == sm.private_strStateActual
 
   # TRIPTEST_ASSERT(hsm_Statemachine.state == sm.state_011)
   testEntryExit(sm, 1, 0, 1, 0, 1)

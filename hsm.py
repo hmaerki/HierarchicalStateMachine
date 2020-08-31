@@ -316,7 +316,7 @@ html_header = '''
   <head>
     <title>Hierarchical State Machine</title> 
     <meta http-equiv='content-type' content='text/html;charset=iso-8859-1'>
-    <meta content='HSM by Positron and Maerki Informatik' name='description'>
+    <meta content='HSM by Maerki Informatik' name='description'>
     <style type='text/css'>
     <!--
     /*  common styles  */
