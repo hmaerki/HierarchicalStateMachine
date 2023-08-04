@@ -17,7 +17,7 @@ from typing import (
     runtime_checkable,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 class _Verb(enum.Enum):
@@ -414,6 +414,13 @@ class HsmMixin:
             # Test also the outer states
             state_actual = state_actual.outer_state
         return False
+
+    def force_state(self, fn: StateType) -> bool:
+        assert isinstance(fn, types.MethodType)
+        self._state_actual= self._dict_fn_state[fn]
+        self._logger.fn_log_info(
+                f"force_state({self._state_actual.full_name})"
+            )
 
     def set_logger(self, logger: HsmLogger):
         """
