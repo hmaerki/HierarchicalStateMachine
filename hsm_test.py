@@ -2,8 +2,8 @@ import pathlib
 
 import pytest
 
-import hsm
-from hsm import (
+from hsm import hsm
+from hsm.hsm import (
     BadStateException,
     BadStatemachineException,
     DontChangeStateException,

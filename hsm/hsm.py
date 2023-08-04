@@ -17,6 +17,8 @@ from typing import (
     runtime_checkable,
 )
 
+__version__ = "1.0.0"
+
 
 class _Verb(enum.Enum):
     STATE = "state_"

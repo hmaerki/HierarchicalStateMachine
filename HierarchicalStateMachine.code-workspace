@@ -29,7 +29,8 @@
 				"console": "integratedTerminal",
 				"args": [
 					"check",
-					"."
+					".",
+					"hsm",
 				],
 				"justMyCode": true
 			},
@@ -86,7 +87,7 @@
 				"name": "HSM - hsm_test.py",
 				"request": "launch",
 				"type": "python",
-				"program": "${workspaceFolder}/hsm_test.py",
+				"module": "hsm.hsm_test",
 				"cwd": "${workspaceFolder}",
 				"env": {
 					"PYTHONPATH": "${workspaceFolder}"
