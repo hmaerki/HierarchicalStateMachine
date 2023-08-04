@@ -4,5 +4,157 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Black",
+				"type": "python",
+				"request": "launch",
+				"module": "black",
+				"cwd": "${workspaceFolder}",
+				"args": [
+					"--target-version=py38",
+					"."
+				],
+				"console": "integratedTerminal",
+				"justMyCode": true
+			},
+			{
+				"name": "Ruff",
+				"type": "python",
+				"request": "launch",
+				"module": "ruff",
+				"cwd": "${workspaceFolder}",
+				"console": "integratedTerminal",
+				"args": [
+					"check",
+					"."
+				],
+				"justMyCode": true
+			},
+			{
+				"name": "Mypy",
+				"type": "python",
+				"request": "launch",
+				"module": "mypy",
+				"cwd": "${workspaceFolder}",
+				"console": "integratedTerminal",
+				// "args": ["--verbose"],
+				"justMyCode": true
+			},
+			{
+				"name": "Pylint",
+				"type": "python",
+				"request": "launch",
+				"module": "pylint",
+				"cwd": "${workspaceFolder}",
+				"args": [
+					"--rcfile=${workspaceFolder}/.pylintrc",
+					"--verbose",
+					"--recursive=yes",
+					"."
+				],
+				"console": "integratedTerminal"
+			},
+			{
+				"name": "Pytest",
+				"type": "python",
+				"request": "launch",
+				"module": "pytest",
+				"cwd": "${workspaceFolder}",
+				"args": [
+					"-s",
+					"-v"
+				],
+				"console": "integratedTerminal",
+				"justMyCode": true
+			},
+			{
+				"name": "Python: Current File",
+				"type": "python",
+				"request": "launch",
+				"program": "${file}",
+				"cwd": "${workspaceFolder}",
+				"console": "integratedTerminal",
+				"env": {
+					"PYTHONPATH": "${workspaceFolder}"
+				},
+				"justMyCode": false
+			},
+			{
+				"name": "HSM - hsm_test.py",
+				"request": "launch",
+				"type": "python",
+				"program": "${workspaceFolder}/hsm_test.py",
+				"cwd": "${workspaceFolder}",
+				"env": {
+					"PYTHONPATH": "${workspaceFolder}"
+				},
+				"console": "integratedTerminal",
+				"justMyCode": true
+			}
+		]
+	},
+	"settings": {
+		"python.formatting.provider": "black",
+		"python.linting.enabled": true,
+		"python.linting.pylintEnabled": false,
+		"python.linting.pylintArgs": [
+			"--rcfile=${workspaceFolder}/.pylintrc"
+		],
+		"python.linting.cwd": "${workspaceFolder}",
+		"python.linting.mypyEnabled": true,
+		"terminal.integrated.defaultProfile.windows": "Git Bash",
+		"terminal.integrated.defaultProfile.linux": "",
+		// "python.testing.pytestArgs": [],
+		"python.testing.cwd": "${workspaceFolder}",
+		"python.testing.unittestEnabled": false,
+		"python.testing.pytestEnabled": true,
+		"python.linting.mypyArgs": [
+			"--config-file=${workspaceFolder}/.mypy.ini"
+		],
+		"ruff.organizeImports": true,
+		"ruff.fixAll": true,
+		"ruff.importStrategy": "fromEnvironment",
+		"ruff.args": [
+			"--config=${workspaceFolder}/.ruff.toml"
+		],
+		"[python]": {
+			"editor.defaultFormatter": "ms-python.black-formatter",
+			"editor.formatOnSave": true,
+			"editor.codeActionsOnSave": {
+				"source.fixAll": true,
+				"source.organizeImports": true
+			}
+		},
+		// "isort.args": [
+		// 	"--profile",
+		// 	"black"
+		// ],
+		// "base", "forest", "dark", "default", "neutral"
+		"markdown-mermaid.lightModeTheme": "base",
+		"markdown-mermaid.darkModeTheme": "dark",
+		"files.exclude": {
+			"app/ui/*.py": true,
+			"app/uic/": true,
+			"**/__pycache__/": true,
+			"**/.mypy_cache/": true,
+			"**/.pytest_cache/": true
+		},
+		"git.openRepositoryInParentFolders": "always",
+		"qtForPython.rcc.liveExecution.enabled": false
+	},
+	"extensions": {
+		"recommendations": [
+			"hediet.vscode-drawio",
+			"mhutchie.git-graph",
+			"ms-python.python",
+			"ms-python.black-formatter",
+			"ms-python.isort",
+			"bierner.markdown-mermaid",
+			"joffreykern.markdown-toc",
+			"charliermarsh.ruff"
+		]
+	}
 }
