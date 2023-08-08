@@ -150,14 +150,16 @@
 	},
 	"extensions": {
 		"recommendations": [
+			"bierner.markdown-mermaid",
+			"charliermarsh.ruff",
 			"hediet.vscode-drawio",
+			"joffreykern.markdown-toc",
 			"mhutchie.git-graph",
-			"ms-python.python",
 			"ms-python.black-formatter",
 			"ms-python.isort",
-			"bierner.markdown-mermaid",
-			"joffreykern.markdown-toc",
-			"charliermarsh.ruff"
+			"ms-python.mypy-type-checker",
+			"ms-python.pylint",
+			"ms-python.python"
 		]
 	}
 }
