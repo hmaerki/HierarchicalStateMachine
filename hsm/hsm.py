@@ -338,7 +338,13 @@ class HsmLogger(Protocol):
     def fn_log_debug(self, msg: str) -> None:
         ...
 
-    def fn_state_change(self, before: HsmState, after: HsmState, why: str) -> None:
+    def fn_state_change(
+        self,
+        before: HsmState,
+        after: HsmState,
+        why: str,
+        list_entry_exit: List[str],
+    ) -> None:
         ...
 
 
@@ -352,11 +358,23 @@ class _StringIoLogger(HsmLogger):
     def fn_log_debug(self, msg: str) -> None:
         self._f.write(f"> {msg}\n")
 
-    def fn_state_change(self, before: HsmState, after: HsmState, why: str) -> None:
+    def fn_state_change(
+        self,
+        before: HsmState,
+        after: HsmState,
+        why: str,
+        list_entry_exit: List[str],
+    ) -> None:
         why_text = ""
         if why is not None:
             why_text = f" ({why})"
-        self._f.write(f">>> {before.full_name} ==> {after.full_name}{why_text}\n")
+        # self._f.write(f">>> {before.full_name} ==> {after.full_name}{why_text}\n")
+        text_entry_exit = "==>"
+        if len(list_entry_exit) > 0:
+            text_entry_exit = f"==>{'==>'.join(list_entry_exit)}==>"
+        self._f.write(
+            f">>> {before.full_name} {text_entry_exit} {after.full_name}{why_text}\n"
+        )
 
     @staticmethod
     def strip_string(multiline_text: str) -> str:
@@ -478,22 +496,24 @@ class HsmMixin:
             self._state_actual = state_after
 
         # Call the exit/entry-actions
-        self.call_exit_entry_actions(
+        list_entry_exit = self.call_exit_entry_actions(
             signal=signal,
             state_before=state_before,
             state_after=state_after,
         )
 
-        self._logger.fn_state_change(state_before, state_after, why)
+        self._logger.fn_state_change(state_before, state_after, why, list_entry_exit)
 
     def call_exit_entry_actions(
         self,
         signal: SignalType,
         state_before: HsmState,
         state_after,
-    ):
+    ) -> List[str]:
         assert isinstance(state_before, HsmState)
         assert isinstance(state_after, HsmState)
+
+        list_entry_exit: List[str] = []
 
         def find_common_path() -> List[str]:
             path_before = state_before.path
@@ -513,6 +533,7 @@ class HsmMixin:
         while state_before is not toppest_state:
             if state_before.fn_exit is not None:
                 self._logger.fn_log_debug(f"  Calling {state_before.fn_exit.__name__}")
+                list_entry_exit.append(state_before.fn_exit.__name__)
                 state_before.fn_exit(signal)
             state_before = state_before.outer_state
 
@@ -523,9 +544,12 @@ class HsmMixin:
             recurse_entry_actions(state=state.outer_state)
             if state.fn_entry is not None:
                 self._logger.fn_log_debug(f"  Calling {state.fn_entry.__name__}")
+                list_entry_exit.append(state.fn_entry.__name__)
                 state.fn_entry(signal)
 
         recurse_entry_actions(state_after)
+
+        return list_entry_exit
 
     def find_state(self, path: List[str], error_if_not_exists: str = None) -> HsmState:
         actual_state = self._top_state
@@ -595,7 +619,6 @@ class HsmMixin:
 
     def start(self):
         # Call the entry-actions
-        # self.call_exit_entry_actions(self.strTopState, self._state_actual)
         self.call_exit_entry_actions(
             signal=None, state_before=self._top_state, state_after=self._state_actual
         )

@@ -3,9 +3,14 @@ import pathlib
 import pytest
 
 from hsm import hsm
-from hsm.hsm import (BadStateException, BadStatemachineException,
-                     DontChangeStateException, HsmMixin, IgnoreEventException,
-                     StateChangeException)
+from hsm.hsm import (
+    BadStateException,
+    BadStatemachineException,
+    DontChangeStateException,
+    HsmMixin,
+    IgnoreEventException,
+    StateChangeException,
+)
 
 SignalType = str
 
@@ -119,7 +124,7 @@ def test_practical_statecharts():
             >   calling state "state_0_1_1(G)"
             > G: was handled by state_0_1_1
             >   Calling exit_0_1
-            >>> 0_1_1 ==> 0_2_1_1
+            >>> 0_1_1 ==>exit_0_1==> 0_2_1_1
         """
     )
 
@@ -149,7 +154,7 @@ def test_practical_statecharts():
             > F: was handled by state_0_2
             >   Calling entry_0_1
             >   Calling entry_0_1_1
-            >>> 0_2_1_1 ==> 0_1_1
+            >>> 0_2_1_1 ==>entry_0_1==>entry_0_1_1==> 0_1_1
         """
     )
 
@@ -161,7 +166,8 @@ def test_practical_statecharts():
             >   calling state "state_0_1_1(E)"
             > E: was handled by state_0_1
             >   Calling exit_0_1
-            >>> 0_1_1 ==> 0_2_1_1
+            >>> 0_1_1 ==>exit_0_1==> 0_2_1_1
+
         """
     )
 
@@ -219,7 +225,7 @@ def test_practical_statecharts():
             >   Init-State for 0_1 is 0_1_1.
             >   Calling entry_0_1
             >   Calling entry_0_1_1
-            >>> 0_2_1_1 ==> 0_1_1 
+            >>> 0_2_1_1 ==>entry_0_1==>entry_0_1_1==> 0_1_1
         """
     )
 
@@ -255,7 +261,7 @@ def test_practical_statecharts():
             >   calling state "state_0_1_1(G)"
             > G: was handled by state_0_1_1
             >   Calling exit_0_1
-            >>> 0_1_1 ==> 0_2_1_1
+            >>> 0_1_1 ==>exit_0_1==> 0_2_1_1
         """
     )
 
@@ -269,7 +275,7 @@ def test_practical_statecharts():
             >   Init-State for 0 is 0_1_1.
             >   Calling entry_0_1
             >   Calling entry_0_1_1
-            >>> 0_2_1_1 ==> 0_1_1
+            >>> 0_2_1_1 ==>entry_0_1==>entry_0_1_1==> 0_1_1
         """
     )
 
@@ -434,7 +440,7 @@ def test_simple_statemachine():
             >   calling state "state_TopA_SubB(a)"
             > a: was handled by state_TopA
             >   Calling exit_TopA_SubB
-            >>> TopA_SubB ==> TopA_SubA
+            >>> TopA_SubB ==>exit_TopA_SubB==> TopA_SubA
         """
     )
     sm.dispatch("b")
@@ -444,7 +450,7 @@ def test_simple_statemachine():
             >   calling state "state_TopA_SubA(b)"
             > b: was handled by state_TopA_SubA
             >   Calling entry_TopA_SubB
-            >>> TopA_SubA ==> TopA_SubB
+            >>> TopA_SubA ==>entry_TopA_SubB==> TopA_SubB
         """
     )
     sm.dispatch("b")
@@ -462,7 +468,7 @@ def test_simple_statemachine():
             >   calling state "state_TopA_SubB(a)"
             > a: was handled by state_TopA
             >   Calling exit_TopA_SubB
-            >>> TopA_SubB ==> TopA_SubA
+            >>> TopA_SubB ==>exit_TopA_SubB==> TopA_SubA
         """
     )
 
@@ -525,7 +531,7 @@ def test_statemachine_with_entry_exit_actions():
             > r: was handled by state_TopA
             >   Calling exit_TopA
             >   Calling entry_TopC
-            >>> TopA ==> TopC
+            >>> TopA ==>exit_TopA==>entry_TopC==> TopC
         """
     )
     sm.dispatch("s")
@@ -538,7 +544,7 @@ def test_statemachine_with_entry_exit_actions():
             >   Calling entry_TopB
             >   Calling entry_TopB_SubA
             >   Calling entry_TopB_SubA_SubsubA
-            >>> TopC ==> TopB_SubA_SubsubA
+            >>> TopC ==>exit_TopC==>entry_TopB==>entry_TopB_SubA==>entry_TopB_SubA_SubsubA==> TopB_SubA_SubsubA
         """
     )
     sm.dispatch("t")
@@ -551,7 +557,7 @@ def test_statemachine_with_entry_exit_actions():
             >   Calling exit_TopB_SubA
             >   Calling exit_TopB
             >   Calling entry_TopC
-            >>> TopB_SubA_SubsubA ==> TopC
+            >>> TopB_SubA_SubsubA ==>exit_TopB_SubA_SubsubA==>exit_TopB_SubA==>exit_TopB==>entry_TopC==> TopC
         """
     )
 
