@@ -3,15 +3,9 @@ import pathlib
 import pytest
 
 from hsm import hsm
-from hsm.hsm import (
-    BadStateException,
-    BadStatemachineException,
-    DontChangeStateException,
-    HsmMixin,
-    IgnoreEventException,
-    StateChangeException,
-    StateType,
-)
+from hsm.hsm import (BadStateException, BadStatemachineException,
+                     DontChangeStateException, HsmMixin, IgnoreEventException,
+                     StateChangeException)
 
 SignalType = str
 
@@ -110,13 +104,6 @@ def test_practical_statecharts():
     sm.init()
     sm.write_mermaid_md(DIRECTORY_RESULTS / f"{test_practical_statecharts.__name__}.md")
 
-    def dispatch_and_expect_state(
-        sm, signal: SignalType, expect_state: StateType
-    ) -> None:
-        sm.dispatch(signal)
-        expect_state_name = expect_state.__name__[len("state_") :]
-        assert expect_state_name == sm._state_actual.full_name
-
     # TRIPTEST_ASSERT(hsm_Statemachine.state == sm.state_011)
     # test_entry_exit(sm, 1, 0, 1, 0, 1)
     sm._logger.assert_equal(
@@ -124,7 +111,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "G", sm.state_0_2_1_1)
+    sm.dispatch("G")
     # test_entry_exit(sm, 0, 0, 0, 1, 0)
     sm._logger.assert_equal(
         """
@@ -153,7 +140,7 @@ def test_practical_statecharts():
     assert sm.is_state(sm.state_0_2)
     assert sm.is_state(sm.state_0)
 
-    dispatch_and_expect_state(sm, "F", sm.state_0_1_1)
+    sm.dispatch("F")
     # test_entry_exit(sm, 0, 0, 1, 0, 1)
     sm._logger.assert_equal(
         """
@@ -166,7 +153,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "E", sm.state_0_2_1_1)
+    sm.dispatch("E")
     # test_entry_exit(sm, 0, 0, 0, 1, 0)
     sm._logger.assert_equal(
         """
@@ -178,7 +165,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "C", sm.state_0_2_2)
+    sm.dispatch("C")
     # test_entry_exit(sm, 0, 0, 0, 0, 0)
     sm._logger.assert_equal(
         """
@@ -189,7 +176,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "B", sm.state_0_2_2)
+    sm.dispatch("B")
     # test_entry_exit(sm, 0, 0, 0, 0, 0)
     sm._logger.assert_equal(
         """
@@ -199,7 +186,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "E", sm.state_0_2_1_1)
+    sm.dispatch("E")
     # test_entry_exit(sm, 1, 1, 0, 0, 0)
     sm._logger.assert_equal(
         """
@@ -210,7 +197,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "D", sm.state_0_2_1_1)
+    sm.dispatch("D")
     # test_entry_exit(sm, 0, 0, 0, 0, 0)
     sm._logger.assert_equal(
         """
@@ -222,7 +209,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "K", sm.state_0_1_1)
+    sm.dispatch("K")
     # test_entry_exit(sm, 0, 0, 1, 0, 1)
     sm._logger.assert_equal(
         """
@@ -236,7 +223,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "A", sm.state_0_1_1)
+    sm.dispatch("A")
     # test_entry_exit(sm, 0, 0, 1, 1, 1)
     sm._logger.assert_equal(
         """
@@ -248,7 +235,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "I", sm.state_0_1_1)
+    sm.dispatch("I")
     # test_entry_exit(sm, 1, 1, 1, 1, 1)
     sm._logger.assert_equal(
         """
@@ -260,7 +247,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "G", sm.state_0_2_1_1)
+    sm.dispatch("G")
     # test_entry_exit(sm, 0, 0, 0, 1, 0)
     sm._logger.assert_equal(
         """
@@ -272,7 +259,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "I", sm.state_0_1_1)
+    sm.dispatch("I")
     # test_entry_exit(sm, 1, 1, 1, 0, 1)
     sm._logger.assert_equal(
         """
@@ -286,7 +273,7 @@ def test_practical_statecharts():
         """
     )
 
-    dispatch_and_expect_state(sm, "J", sm.state_0_1_1)
+    sm.dispatch("J")
     # test_entry_exit(sm, 0, 0, 0, 0, 0)
     sm._logger.assert_equal(
         """
@@ -389,7 +376,7 @@ def test_simple_statemachine_top_state_handles_signal():
 
         def state_TopA_SubA(self, signal: SignalType):
             if signal == "b":
-                raise StateChangeException(self.state_TopA_SubA)
+                raise StateChangeException(self.state_TopA_SubA, why="Got b")
 
     sm = UnderTest()
     sm.init()
@@ -405,6 +392,15 @@ def test_simple_statemachine_top_state_handles_signal():
             >   No state change!
         """
     )
+    sm.dispatch("b")
+    sm._logger.assert_equal(
+        """
+            'b': will be handled by TopA_SubA
+            >   calling state "state_TopA_SubA(b)"
+            > b: was handled by state_TopA_SubA
+            >>> TopA_SubA ==> TopA_SubA (Got b)
+        """
+    )
 
 
 def test_simple_statemachine():
@@ -412,7 +408,7 @@ def test_simple_statemachine():
         def state_TopA(self, signal: SignalType):
             if signal == "a":
                 raise StateChangeException(self.state_TopA_SubA)
-            raise IgnoreEventException()
+            raise IgnoreEventException("Weekend, do not bother me!")
 
         def state_TopA_SubA(self, signal: SignalType):
             if signal == "b":
@@ -456,7 +452,7 @@ def test_simple_statemachine():
         """
             'b': will be handled by TopA_SubB
             >   calling state "state_TopA_SubB(b)"
-            >   Empty Transition!
+            >   Empty Transition! (Weekend, do not bother me!)
         """
     )
     sm.dispatch("a")
