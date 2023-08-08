@@ -66,7 +66,9 @@
 				"cwd": "${workspaceFolder}",
 				"args": [
 					"-s",
-					"-v"
+					"-v",
+					"hsm",
+					"hsm_test.py"
 				],
 				"console": "integratedTerminal",
 				"justMyCode": true

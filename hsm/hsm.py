@@ -406,7 +406,12 @@ class HsmMixin:
         self._state_actual: HsmState = None
 
     def get_state(self) -> HsmState:
+        self.assert_initialized()
+
         return self._state_actual
+
+    def assert_initialized(self) -> None:
+        assert self._state_actual is not None, "You have to call 'init()' first!"
 
     def assert_valid_state(self, *fns: StateType) -> None:
         for fn in fns:
@@ -428,6 +433,8 @@ class HsmMixin:
         """
         If a outer state is given, all substates are implied too!
         """
+        self.assert_initialized()
+
         self.assert_valid_state(*fns)
         state_actual = self._state_actual
         while state_actual.fn_state is not None:
@@ -441,6 +448,8 @@ class HsmMixin:
         return False
 
     def force_state(self, fn: StateType) -> bool:
+        self.assert_initialized()
+
         assert isinstance(fn, types.MethodType)
         self._state_actual = self._dict_fn_state[fn]
         self._logger.fn_log_info(f"force_state({self._state_actual.full_name})")
@@ -453,6 +462,8 @@ class HsmMixin:
         self._logger = logger
 
     def dispatch(self, signal: SignalType):
+        self.assert_initialized()
+
         state_before = self._state_actual
         why = None
 
@@ -618,6 +629,8 @@ class HsmMixin:
         # self.start()
 
     def start(self):
+        self.assert_initialized()
+
         # Call the entry-actions
         self.call_exit_entry_actions(
             signal=None, state_before=self._top_state, state_after=self._state_actual

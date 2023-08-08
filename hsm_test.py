@@ -374,6 +374,18 @@ def test_unmatched_exit_action():
     assert "No corresponding state_Xyz() for exit_TopA_SubB()!" == excinfo.value.args[0]
 
 
+def test_init_not_called():
+    class UnderTest(HsmMixin):
+        @hsm.init_state
+        def state_TopA(self, signal: SignalType):
+            pass
+
+    sm = UnderTest()
+    with pytest.raises(AssertionError) as excinfo:
+        sm.dispatch("Peng")
+    assert "You have to call 'init()' first!" == excinfo.value.args[0]
+
+
 def test_simple_statemachine_top_state_handles_signal():
     class UnderTest(HsmMixin):
         def state_TopA(self, signal: SignalType):
