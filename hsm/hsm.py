@@ -17,7 +17,7 @@ from typing import (
     runtime_checkable,
 )
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 
 class _Verb(enum.Enum):
@@ -45,6 +45,7 @@ EntryType = StateType
 ExitType = StateType
 
 _HSM_INIT_INITSTATE = "hsm_init"
+_HSM_VALUE = "hsm_value"
 
 
 class StateChangeException(Exception):
@@ -92,6 +93,25 @@ def init_state(f: Callable[[Any, SignalType], Any]) -> Callable[[Any, SignalType
         raise BadStatemachineException(err)
     setattr(f, _HSM_INIT_INITSTATE, True)
     return f
+
+
+def value(v: int):
+    """
+    Decorator to give every state a numeric value.
+    This may be used to display timeseries of state_values in grafana.
+    """
+    assert isinstance(v, int)
+
+    def inner(f: Callable[[Any, SignalType], Any]) -> Callable[[Any, SignalType], Any]:
+        _assert_is_func_or_method(f)
+
+        err = f"'{f.__name__}()' does NOT start with '{_Verb.STATE.value}'. It may not be a init_state!"
+        if not f.__name__.startswith(_Verb.STATE.value):
+            raise BadStatemachineException(err)
+        setattr(f, _HSM_VALUE, v)
+        return f
+
+    return inner
 
 
 @dataclasses.dataclass(frozen=True, repr=True)
@@ -329,14 +349,16 @@ class HsmState:
                     f"{_MERMAID_INDENT}{state.mermaid_tag} --> {transition_from.state_to.mermaid_tag}: {transition_from.when}\n"
                 )
 
+    @property
+    def value(self) -> int:
+        return getattr(self.fn_state, _HSM_VALUE)
+
 
 @runtime_checkable
-class HsmLogger(Protocol):
-    def fn_log_info(self, msg: str) -> None:
-        ...
+class HsmLoggerProtocol(Protocol):
+    def fn_log_info(self, msg: str) -> None: ...
 
-    def fn_log_debug(self, msg: str) -> None:
-        ...
+    def fn_log_debug(self, msg: str) -> None: ...
 
     def fn_state_change(
         self,
@@ -344,11 +366,10 @@ class HsmLogger(Protocol):
         after: HsmState,
         why: str,
         list_entry_exit: List[str],
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
-class _StringIoLogger(HsmLogger):
+class HsmStringIoLogger(HsmLoggerProtocol):
     def __init__(self):
         self._f = io.StringIO()
 
@@ -383,7 +404,7 @@ class _StringIoLogger(HsmLogger):
         return "\n".join(lines)
 
     def assert_equal(self, expected: str) -> None:
-        expected_stripped = _StringIoLogger.strip_string(expected)
+        expected_stripped = HsmStringIoLogger.strip_string(expected)
         stripped = self.get_log(reset=True)
         assert (
             stripped == expected_stripped
@@ -393,17 +414,24 @@ class _StringIoLogger(HsmLogger):
         multiline_text = self._f.getvalue()
         if reset:
             self._f = io.StringIO()
-        return _StringIoLogger.strip_string(multiline_text)
+        return HsmStringIoLogger.strip_string(multiline_text)
 
 
 class HsmMixin:
-    def __init__(self, mermaid_detailed=True, mermaid_entryexit=True):
+    def __init__(
+        self,
+        mermaid_detailed=True,
+        mermaid_entryexit=True,
+        hsm_logger: HsmLoggerProtocol = None,
+    ):
         self._mermaid_detailed = mermaid_detailed
         self._mermaid_entryexit = mermaid_entryexit
-        self._logger: HsmLogger = _StringIoLogger()
+        self._loggers: List[HsmLoggerProtocol] = []
         self._top_state = HsmState(hsm=self)
         self._dict_fn_state: Dict[StateType, HsmState] = {}
         self._state_actual: HsmState = None
+        if hsm_logger is not None:
+            self.add_logger(hsm_logger)
 
     def get_state(self) -> HsmState:
         self.assert_initialized()
@@ -452,14 +480,32 @@ class HsmMixin:
 
         assert isinstance(fn, types.MethodType)
         self._state_actual = self._dict_fn_state[fn]
-        self._logger.fn_log_info(f"force_state({self._state_actual.full_name})")
+        self._fn_log_info(f"force_state({self._state_actual.full_name})")
 
-    def set_logger(self, logger: HsmLogger):
+    def add_logger(self, hsm_logger: HsmLoggerProtocol):
         """
-        Tell the statemachine where to log
+        Append a logger
         """
-        assert isinstance(logger, HsmLogger)
-        self._logger = logger
+        assert isinstance(hsm_logger, HsmLoggerProtocol)
+        self._loggers.append(hsm_logger)
+
+    def _fn_log_info(self, msg: str) -> None:
+        for l in self._loggers:
+            l.fn_log_info(msg)
+
+    def _fn_log_debug(self, msg: str) -> None:
+        for l in self._loggers:
+            l.fn_log_debug(msg)
+
+    def _fn_state_change(
+        self,
+        before: HsmState,
+        after: HsmState,
+        why: str,
+        list_entry_exit: List[str],
+    ) -> None:
+        for l in self._loggers:
+            l.fn_state_change(before, after, why, list_entry_exit)
 
     def dispatch(self, signal: SignalType):
         self.assert_initialized()
@@ -468,10 +514,10 @@ class HsmMixin:
         why = None
 
         try:
-            self._logger.fn_log_info(
+            self._fn_log_info(
                 f"{signal!r}: will be handled by {self._state_actual.full_name}"
             )
-            self._logger.fn_log_debug(
+            self._fn_log_debug(
                 f'  calling state "state_{state_before.full_name}({signal})"'
             )
             handling_state = self._state_actual
@@ -483,25 +529,25 @@ class HsmMixin:
                     raise Exception(err)  # pylint: disable=broad-exception-raised
 
         except DontChangeStateException:
-            self._logger.fn_log_debug("  No state change!")
+            self._fn_log_debug("  No state change!")
             return
         except IgnoreEventException as e:
             why = e.why
             why_text = ""
             if why is not None:
                 why_text = f" ({why})"
-            self._logger.fn_log_debug(f"  Empty Transition!{why_text}")
+            self._fn_log_debug(f"  Empty Transition!{why_text}")
             return
         except StateChangeException as e:
             why = e.why
-            self._logger.fn_log_debug(
+            self._fn_log_debug(
                 f"{signal}: was handled by state_{handling_state.full_name}"
             )
             # Evaluate init-state
             new_state = self._dict_fn_state[e.fn_new_state]
             state_after = new_state.resolve_init_state()
             if state_after is not new_state:
-                self._logger.fn_log_debug(
+                self._fn_log_debug(
                     f"  Init-State for {new_state.full_name} is {state_after.full_name}."
                 )
             self._state_actual = state_after
@@ -513,7 +559,7 @@ class HsmMixin:
             state_after=state_after,
         )
 
-        self._logger.fn_state_change(state_before, state_after, why, list_entry_exit)
+        self._fn_state_change(state_before, state_after, why, list_entry_exit)
 
     def call_exit_entry_actions(
         self,
@@ -543,7 +589,7 @@ class HsmMixin:
         # Call Exit-Actions
         while state_before is not toppest_state:
             if state_before.fn_exit is not None:
-                self._logger.fn_log_debug(f"  Calling {state_before.fn_exit.__name__}")
+                self._fn_log_debug(f"  Calling {state_before.fn_exit.__name__}")
                 list_entry_exit.append(state_before.fn_exit.__name__)
                 state_before.fn_exit(signal)
             state_before = state_before.outer_state
@@ -554,7 +600,7 @@ class HsmMixin:
                 return
             recurse_entry_actions(state=state.outer_state)
             if state.fn_entry is not None:
-                self._logger.fn_log_debug(f"  Calling {state.fn_entry.__name__}")
+                self._fn_log_debug(f"  Calling {state.fn_entry.__name__}")
                 list_entry_exit.append(state.fn_entry.__name__)
                 state.fn_entry(signal)
 

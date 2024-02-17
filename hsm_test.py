@@ -10,6 +10,7 @@ from hsm.hsm import (
     HsmMixin,
     IgnoreEventException,
     StateChangeException,
+    HsmStringIoLogger,
 )
 
 SignalType = str
@@ -105,20 +106,21 @@ def test_practical_statecharts():
         def entry_0_1_1(self, signal: SignalType):
             "Start RS"
 
-    sm = UnderTest()
+    logger = HsmStringIoLogger()
+    sm = UnderTest(hsm_logger=logger)
     sm.init()
     sm.write_mermaid_md(DIRECTORY_RESULTS / f"{test_practical_statecharts.__name__}.md")
 
     # TRIPTEST_ASSERT(hsm_Statemachine.state == sm.state_011)
     # test_entry_exit(sm, 1, 0, 1, 0, 1)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
         """
     )
 
     sm.dispatch("G")
     # test_entry_exit(sm, 0, 0, 0, 1, 0)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'G': will be handled by 0_1_1
             >   calling state "state_0_1_1(G)"
@@ -147,7 +149,7 @@ def test_practical_statecharts():
 
     sm.dispatch("F")
     # test_entry_exit(sm, 0, 0, 1, 0, 1)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'F': will be handled by 0_2_1_1
             >   calling state "state_0_2_1_1(F)"
@@ -160,7 +162,7 @@ def test_practical_statecharts():
 
     sm.dispatch("E")
     # test_entry_exit(sm, 0, 0, 0, 1, 0)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'E': will be handled by 0_1_1
             >   calling state "state_0_1_1(E)"
@@ -173,7 +175,7 @@ def test_practical_statecharts():
 
     sm.dispatch("C")
     # test_entry_exit(sm, 0, 0, 0, 0, 0)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'C': will be handled by 0_2_1_1
             >   calling state "state_0_2_1_1(C)"
@@ -184,7 +186,7 @@ def test_practical_statecharts():
 
     sm.dispatch("B")
     # test_entry_exit(sm, 0, 0, 0, 0, 0)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'B': will be handled by 0_2_2
             >   calling state "state_0_2_2(B)"
@@ -194,7 +196,7 @@ def test_practical_statecharts():
 
     sm.dispatch("E")
     # test_entry_exit(sm, 1, 1, 0, 0, 0)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'E': will be handled by 0_2_2
             >   calling state "state_0_2_2(E)"
@@ -205,7 +207,7 @@ def test_practical_statecharts():
 
     sm.dispatch("D")
     # test_entry_exit(sm, 0, 0, 0, 0, 0)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'D': will be handled by 0_2_1_1
             >   calling state "state_0_2_1_1(D)"
@@ -217,7 +219,7 @@ def test_practical_statecharts():
 
     sm.dispatch("K")
     # test_entry_exit(sm, 0, 0, 1, 0, 1)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'K': will be handled by 0_2_1_1
             >   calling state "state_0_2_1_1(K)"
@@ -231,7 +233,7 @@ def test_practical_statecharts():
 
     sm.dispatch("A")
     # test_entry_exit(sm, 0, 0, 1, 1, 1)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'A': will be handled by 0_1_1
             >   calling state "state_0_1_1(A)"
@@ -243,7 +245,7 @@ def test_practical_statecharts():
 
     sm.dispatch("I")
     # test_entry_exit(sm, 1, 1, 1, 1, 1)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'I': will be handled by 0_1_1
             >   calling state "state_0_1_1(I)"
@@ -255,7 +257,7 @@ def test_practical_statecharts():
 
     sm.dispatch("G")
     # test_entry_exit(sm, 0, 0, 0, 1, 0)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'G': will be handled by 0_1_1
             >   calling state "state_0_1_1(G)"
@@ -267,7 +269,7 @@ def test_practical_statecharts():
 
     sm.dispatch("I")
     # test_entry_exit(sm, 1, 1, 1, 0, 1)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'I': will be handled by 0_2_1_1
             >   calling state "state_0_2_1_1(I)"
@@ -281,7 +283,7 @@ def test_practical_statecharts():
 
     sm.dispatch("J")
     # test_entry_exit(sm, 0, 0, 0, 0, 0)
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'J': will be handled by 0_1_1
             >   calling state "state_0_1_1(J)"
@@ -396,14 +398,15 @@ def test_simple_statemachine_top_state_handles_signal():
             if signal == "b":
                 raise StateChangeException(self.state_TopA_SubA, why="Got b")
 
-    sm = UnderTest()
+    logger = HsmStringIoLogger()
+    sm = UnderTest(hsm_logger=logger)
     sm.init()
     sm.write_mermaid_md(
         DIRECTORY_RESULTS
         / f"{test_simple_statemachine_top_state_handles_signal.__name__}.md"
     )
     sm.dispatch("a")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'a': will be handled by TopA_SubA
             >   calling state "state_TopA_SubA(a)"
@@ -411,7 +414,7 @@ def test_simple_statemachine_top_state_handles_signal():
         """
     )
     sm.dispatch("b")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'b': will be handled by TopA_SubA
             >   calling state "state_TopA_SubA(b)"
@@ -423,15 +426,18 @@ def test_simple_statemachine_top_state_handles_signal():
 
 def test_simple_statemachine():
     class UnderTest(HsmMixin):
+        @hsm.value(1)
         def state_TopA(self, signal: SignalType):
             if signal == "a":
                 raise StateChangeException(self.state_TopA_SubA)
             raise IgnoreEventException("Weekend, do not bother me!")
 
+        @hsm.value(2)
         def state_TopA_SubA(self, signal: SignalType):
             if signal == "b":
                 raise StateChangeException(self.state_TopA_SubB)
 
+        @hsm.value(3)
         @hsm.init_state
         def state_TopA_SubB(self, signal: SignalType):
             pass
@@ -442,11 +448,12 @@ def test_simple_statemachine():
         def entry_TopA_SubB(self, signal: SignalType):
             pass
 
-    sm = UnderTest()
+    logger = HsmStringIoLogger()
+    sm = UnderTest(hsm_logger=logger)
     sm.init()
     sm.write_mermaid_md(DIRECTORY_RESULTS / f"{test_simple_statemachine.__name__}.md")
     sm.dispatch("a")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'a': will be handled by TopA_SubB
             >   calling state "state_TopA_SubB(a)"
@@ -456,7 +463,7 @@ def test_simple_statemachine():
         """
     )
     sm.dispatch("b")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'b': will be handled by TopA_SubA
             >   calling state "state_TopA_SubA(b)"
@@ -466,7 +473,7 @@ def test_simple_statemachine():
         """
     )
     sm.dispatch("b")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'b': will be handled by TopA_SubB
             >   calling state "state_TopA_SubB(b)"
@@ -474,7 +481,7 @@ def test_simple_statemachine():
         """
     )
     sm.dispatch("a")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'a': will be handled by TopA_SubB
             >   calling state "state_TopA_SubB(a)"
@@ -530,13 +537,14 @@ def test_statemachine_with_entry_exit_actions():
         def exit_TopC(self, signal: SignalType):
             pass
 
-    sm = UnderTest()
+    logger = HsmStringIoLogger()
+    sm = UnderTest(hsm_logger=logger)
     sm.init()
     sm.write_mermaid_md(
         DIRECTORY_RESULTS / f"{test_statemachine_with_entry_exit_actions.__name__}.md"
     )
     sm.dispatch("r")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             'r': will be handled by TopA
             >   calling state "state_TopA(r)"
@@ -547,7 +555,7 @@ def test_statemachine_with_entry_exit_actions():
         """
     )
     sm.dispatch("s")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             's': will be handled by TopC
             >   calling state "state_TopC(s)"
@@ -560,7 +568,7 @@ def test_statemachine_with_entry_exit_actions():
         """
     )
     sm.dispatch("t")
-    sm._logger.assert_equal(
+    logger.assert_equal(
         """
             't': will be handled by TopB_SubA_SubsubA
             >   calling state "state_TopB_SubA_SubsubA(t)"
